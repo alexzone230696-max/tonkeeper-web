@@ -1,4 +1,4 @@
-name: Tonkeeper Web Deploy
+name: Tonkeeper Web Deplou
 on:
     workflow_dispatch:
         inputs:
