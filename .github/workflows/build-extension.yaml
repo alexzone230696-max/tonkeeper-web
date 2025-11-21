@@ -1,47 +1,38 @@
-name: Tonkeeper Build Extension
+name: Build APK
+
 on:
-    workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
 jobs:
-    extension-build:
-        name: extension-build
-        runs-on: macos-14
-        timeout-minutes: 10
+  build:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout to git repository
-              uses: actions/checkout@v4
+    steps:
+      # 1. Получаем репозиторий
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Set up Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20.11.1
+      # 2. Устанавливаем JDK
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
 
-            - name: Enable Corepack
-              run: |
-                  corepack enable
+      # 3. Даем права gradlew
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
-            - name: Run install
-              uses: borales/actions-yarn@v5
-              with:
-                  cmd: install
+      # 4. Сборка APK
+      - name: Build APK
+        run: ./gradlew assembleDebug
 
-            - name: Run build
-              uses: borales/actions-yarn@v5
-              with:
-                  cmd: build:extension
-
-            - name: Upload Extension Chrome to artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: Extension Chrome
-                  retention-days: 10
-                  path: |
-                      ${{ github.workspace }}/apps/extension/dist/chrome
-
-            - name: Upload Extension Firefox to artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: Extension Firefox
-                  retention-days: 10
-                  path: |
-                      ${{ github.workspace }}/apps/extension/dist/firefox
+      # 5. Сохранение артефакта (.apk)
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
